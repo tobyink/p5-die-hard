@@ -1,7 +1,7 @@
 package Die::Hard;
 
 use 5.008;
-use Moose;
+use Moo;
 use Scalar::Util ();
 use Carp ();
 use if $] < 5.010, 'UNIVERSAL::DOES';
@@ -14,10 +14,10 @@ BEGIN {
 
 has proxy_for => (
 	is       => 'ro',
-#	isa      => sub {
-#		Scalar::Util::blessed($_[0])
-#			or Carp::confess("proxy_for must be a blessed object")
-#	},
+	isa      => sub {
+		Scalar::Util::blessed($_[0])
+			or Carp::confess("proxy_for must be a blessed object")
+	},
 	required => 1,
 );
 
@@ -31,7 +31,7 @@ has last_error => (
 sub BUILDARGS
 {
 	my $class = shift;
-	return +{ proxy_for => $_[0] } if @_ == 1 && blessed($_[0]);
+	return +{ proxy_for => $_[0] } if @_ == 1 && Scalar::Util::blessed($_[0]);
 	return $class->SUPER::BUILDARGS(@_);
 }
 
@@ -85,7 +85,6 @@ sub DOES
 {
 	my ($self, $role) = @_;
 	return $self->SUPER::DOES($role) unless Scalar::Util::blessed($self);
-	
 	$self->SUPER::DOES($role) or $self->proxy_for->DOES($role);
 }
 
@@ -93,8 +92,7 @@ sub isa
 {
 	my ($self, $role) = @_;
 	return $self->SUPER::isa($role) unless Scalar::Util::blessed($self);
-	
-	$self->SUPER::isa($role) or $self->proxy_for->DOES($role);
+	$self->SUPER::isa($role) or $self->proxy_for->isa($role);
 }
 
 no Moo;
@@ -147,7 +145,25 @@ The object being wrapped. Read-only; required.
 =item C<< last_error >>
 
 If the last proxied method call died, then this attribute will contain
-the error. Otherwise will be false (undef or empty string).
+the error. Otherwise will be undef.
+
+=back
+
+=head2 Methods
+
+=over
+
+=item C<< isa >>
+
+Tells lies; claims to be the object it's proxying.
+
+=item C<< DOES >>
+
+Tells the truth; claims to do the object it's proxying.
+
+=item C<< can >>
+
+Tells the truth; claims it can do anything the object it's proxying can do.
 
 =back
 
@@ -156,14 +172,6 @@ the error. Otherwise will be false (undef or empty string).
 =item AUTOLOAD
 
 =item BUILDARGS
-
-=item can
-
-=item DOES
-
-=item isa
-
-=item VERSION
 
 =end private
 
