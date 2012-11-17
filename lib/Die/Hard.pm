@@ -1,7 +1,7 @@
 package Die::Hard;
 
 use 5.008;
-use Moose;
+use Moo;
 use Scalar::Util ();
 use Carp ();
 use if $] < 5.010, 'UNIVERSAL::DOES';
@@ -14,10 +14,10 @@ BEGIN {
 
 has proxy_for => (
 	is       => 'ro',
-#	isa      => sub {
-#		Scalar::Util::blessed($_[0])
-#			or Carp::confess("proxy_for must be a blessed object")
-#	},
+	isa      => sub {
+		Scalar::Util::blessed($_[0])
+			or Carp::confess("proxy_for must be a blessed object")
+	},
 	required => 1,
 );
 
