@@ -23,7 +23,7 @@ lives_and {
 	is $maclane->live("Foo"), "Foo";
 } '$maclane->live method returns properly';
 
-is $maclane->last_error, '', 'last_error contains no error';
+is $maclane->last_error, undef, 'last_error contains no error';
 
 dies_ok {
 	$obj->die("Bar");

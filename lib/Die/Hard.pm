@@ -1,26 +1,31 @@
 package Die::Hard;
 
-use 5.010;
-use Any::Moose;
-use utf8;
+use 5.008;
+use Moose;
+use Scalar::Util ();
+use Carp ();
+use if $] < 5.010, 'UNIVERSAL::DOES';
 
 BEGIN {
 	no warnings;
 	$Die::Hard::AUTHORITY = 'cpan:TOBYINK';
-	$Die::Hard::VERSION   = '0.001';
+	$Die::Hard::VERSION   = '0.002';
 }
 
 has proxy_for => (
 	is       => 'ro',
-	isa      => 'Object',
+#	isa      => sub {
+#		Scalar::Util::blessed($_[0])
+#			or Carp::confess("proxy_for must be a blessed object")
+#	},
 	required => 1,
 );
 
 has last_error => (
 	is       => 'ro',
-	isa      => 'Any',
 	required => 0,
 	writer   => '_set_last_error',
+	clearer  => '_clear_last_error',
 );
 
 sub BUILDARGS
@@ -30,52 +35,71 @@ sub BUILDARGS
 	return $class->SUPER::BUILDARGS(@_);
 }
 
-our $AUTOLOAD;
-
-foreach my $meth (qw( isa DOES can VERSION ))
-{
-	no strict 'refs';
-	*{$meth} = sub
-	{
-		my $invocant = shift;
-		if (blessed $invocant and wantarray)
-		{
-			my @r = eval { $invocant->proxy_for->$meth(@_) };
-			return @r if @r;
-		}
-		elsif (blessed $invocant)
-		{
-			my $r = eval { $invocant->proxy_for->$meth(@_) };
-			return $r if $r;
-		}
-		my $supermeth = join '::' => 'UNIVERSAL', $meth;
-		return $invocant->$supermeth(@_);
-	}
-}
-
 sub AUTOLOAD
 {
-	my ($meth) = ($AUTOLOAD =~ /::([^:]+)$/);
+	my ($meth) = (our $AUTOLOAD =~ /::([^:]+)$/);
 	
 	local $@ = undef;
 	my $self = shift;
+	
+	$self->_clear_last_error;
+	
+	my $coderef = $self->proxy_for->can($meth) || $meth;
+	
 	if (wantarray)
 	{
-		my @r = eval { $self->proxy_for->$meth(@_) };
-		$self->_set_last_error($@);
-		return @r if @r;
+		my @r;
+		$self->_set_last_error($@)
+			unless eval { @r = $self->proxy_for->$coderef(@_); 1 };
+		return @r;
+	}
+	elsif (defined wantarray)
+	{
+		my $r;
+		$self->_set_last_error($@)
+			unless eval { $r = $self->proxy_for->$coderef(@_); 1 };
+		return $r;
 	}
 	else
 	{
-		my $r = eval { $self->proxy_for->$meth(@_) };
-		$self->_set_last_error($@);
-		return $r if defined $r;
+		$self->_set_last_error($@)
+			unless eval { $self->proxy_for->$coderef(@_); 1 };
+		return;
 	}
+}
+
+sub can
+{
+	my ($self, $method) = @_;
+	return $self->SUPER::can($method) unless Scalar::Util::blessed($self);
 	
+	my $i_can  = $self->SUPER::can($method);
+	my $he_can = $self->proxy_for->can($method);
+	
+	return $i_can if $i_can;
+	return sub { our $AUTOLOAD = $method; goto \&AUTOLOAD } if $he_can;
 	return;
 }
 
-1
+sub DOES
+{
+	my ($self, $role) = @_;
+	return $self->SUPER::DOES($role) unless Scalar::Util::blessed($self);
+	
+	$self->SUPER::DOES($role) or $self->proxy_for->DOES($role);
+}
+
+sub isa
+{
+	my ($self, $role) = @_;
+	return $self->SUPER::isa($role) unless Scalar::Util::blessed($self);
+	
+	$self->SUPER::isa($role) or $self->proxy_for->DOES($role);
+}
+
+no Moo;
+
+1;
 __END__
 
 =head1 NAME
