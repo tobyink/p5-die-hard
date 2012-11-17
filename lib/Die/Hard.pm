@@ -31,7 +31,7 @@ has last_error => (
 sub BUILDARGS
 {
 	my $class = shift;
-	return +{ proxy_for => $_[0] } if @_ == 1 && blessed($_[0]);
+	return +{ proxy_for => $_[0] } if @_ == 1 && Scalar::Util::blessed($_[0]);
 	return $class->SUPER::BUILDARGS(@_);
 }
 
