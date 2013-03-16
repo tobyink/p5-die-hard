@@ -5,6 +5,11 @@
 	label   "You don't like flying, do you?".
 
 `Die-Hard 0.002 cpan:TOBYINK`
-	issued  2012-11-28;
-	label   "No one kills him but me!".
+	issued  2013-03-19;
+	label   "No one kills him but me!";
+	changeset [
+		item "Move from (deprecated) Any::Moose to Moo."^^Update;
+	].
 
+<http://dbpedia.org/resource/Bruce_Willis>
+	<http://dbpedia.org/property/birthDate> 1955-03-19.
