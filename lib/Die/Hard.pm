@@ -9,7 +9,7 @@ use if $] < 5.010, 'UNIVERSAL::DOES';
 BEGIN {
 	no warnings;
 	$Die::Hard::AUTHORITY = 'cpan:TOBYINK';
-	$Die::Hard::VERSION   = '0.002';
+	$Die::Hard::VERSION   = '0.003';
 }
 
 has proxy_for => (
