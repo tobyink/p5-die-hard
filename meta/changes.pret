@@ -25,4 +25,5 @@
 	label     "Zeus! You got a problem with that?";
 	changeset [
 		item "Add repo link."^^Packaging;
+		item "Mention $_try from Object::Util."^^Documentation;
 	].
