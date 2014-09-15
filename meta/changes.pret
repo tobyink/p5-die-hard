@@ -20,3 +20,9 @@
 		item "Switch to Dist::Inkt."^^Packaging;
 	].
 
+`Die-Hard 0.004 cpan:TOBYINK`
+	issued    2014-09-15;
+	label     "Zeus! You got a problem with that?";
+	changeset [
+		item "Add repo link."^^Packaging;
+	].
